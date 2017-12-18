@@ -91,6 +91,24 @@ class CustomStandParameters:
     self.m_Y = 30.
     self.m_Hole = HoleParameters()
 
+  def saveToSettings(self,theSett,theGroup):
+    theSett.beginGroup(theGroup)
+    theSett.setValue("Radius",self.m_StandRadius)
+    theSett.setValue("Height",self.m_Height)
+    theSett.setValue("X",self.m_X)
+    theSett.setValue("Y",self.m_Y)
+    self.m_Hole.saveToSettings(theSett,"Hole")
+    theSett.endGroup()
+
+  def restoreFromSettings(self,theSett,theGroup):
+    theSett.beginGroup(theGroup)
+    self.m_StandRadius = float(theSett.value("Radius",4.0))
+    self.m_Height = float(theSett.value("Height",2.))
+    self.m_X = float(theSett.value("X",30.))
+    self.m_Y = float(theSett.value("Y",30.))
+    self.m_Hole.restoreFromSettings(theSett,"Hole")
+    theSett.endGroup()
+
 class EarParameters:
   BOTTOM_BASE=0
   TOP_BASE=1
@@ -220,6 +238,15 @@ class EnclosureParameters:
     self.m_RightPanel.saveToSettings(aSett,"RightPanel")
     self.m_FrontPanel.saveToSettings(aSett,"FrontPanel")
     self.m_BackPanel.saveToSettings(aSett,"BackPanel")
+    aCustomStandsCount = len(self.m_CustomStands)
+    aSett.setValue("CustomStandsCount",aCustomStandsCount)
+    aSett.beginGroup("CustomStands")
+    anIndx = 1
+    for aCustStand in self.m_CustomStands:
+      aGroup = "CustomStand%s" % str(anIndx)
+      aCustStand.saveToSettings(aSett,aGroup)
+      anIndx = anIndx + 1
+    aSett.endGroup()
 
   def restoreFromSettings(self):
     aSett = QtCore.QSettings(OrganizationName,AppName)
@@ -230,3 +257,10 @@ class EnclosureParameters:
     self.m_RightPanel.restoreFromSettings(aSett,"RightPanel")
     self.m_FrontPanel.restoreFromSettings(aSett,"FrontPanel")
     self.m_BackPanel.restoreFromSettings(aSett,"BackPanel")
+    self.m_CustomStands = []
+    aCustomStandsCount = int(aSett.value("CustomStandsCount",0))
+    for anIndx in range(aCustomStandsCount):
+      aCustStand = CustomStandParameters()
+      aGroup = "CustomStand%s" % str(anIndx+1)
+      aCustStand.restoreFromSettings(aSett,aGroup)
+      self.m_CustomStands.append(aCustStand)  
