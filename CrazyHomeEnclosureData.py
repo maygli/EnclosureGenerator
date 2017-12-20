@@ -229,24 +229,35 @@ class EnclosureParameters:
     anEar = EarParameters()
     self.m_Ears.append(anEar)
 
+  def saveToFile(self,theFileName):
+    aSett = QtCore.QSettings(theFileName, QtCore.QSettings.IniFormat)
+    self.save(aSett)
+    print "Save to file %s" % theFileName
+    aSett.sync()
+    if aSett.status() != aSett.NoError:
+      return False
+    return True 
+
   def saveToSettings(self):
     aSett = QtCore.QSettings(OrganizationName,AppName)
+    self.save(aSett)
 
-    self.m_GeneralParameters.saveToSettings(aSett)
-    self.m_EnclosureStandParameters.saveToSettings(aSett)
-    self.m_LeftPanel.saveToSettings(aSett,"LeftPanel")
-    self.m_RightPanel.saveToSettings(aSett,"RightPanel")
-    self.m_FrontPanel.saveToSettings(aSett,"FrontPanel")
-    self.m_BackPanel.saveToSettings(aSett,"BackPanel")
+  def save(self, theSett):
+    self.m_GeneralParameters.saveToSettings(theSett)
+    self.m_EnclosureStandParameters.saveToSettings(theSett)
+    self.m_LeftPanel.saveToSettings(theSett,"LeftPanel")
+    self.m_RightPanel.saveToSettings(theSett,"RightPanel")
+    self.m_FrontPanel.saveToSettings(theSett,"FrontPanel")
+    self.m_BackPanel.saveToSettings(theSett,"BackPanel")
     aCustomStandsCount = len(self.m_CustomStands)
-    aSett.setValue("CustomStandsCount",aCustomStandsCount)
-    aSett.beginGroup("CustomStands")
+    theSett.setValue("CustomStandsCount",aCustomStandsCount)
+    theSett.beginGroup("CustomStands")
     anIndx = 1
     for aCustStand in self.m_CustomStands:
       aGroup = "CustomStand%s" % str(anIndx)
-      aCustStand.saveToSettings(aSett,aGroup)
+      aCustStand.saveToSettings(theSett,aGroup)
       anIndx = anIndx + 1
-    aSett.endGroup()
+    theSett.endGroup()
 
   def restoreFromSettings(self):
     aSett = QtCore.QSettings(OrganizationName,AppName)

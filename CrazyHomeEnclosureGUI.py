@@ -353,8 +353,16 @@ class EnclosurePanelWidget(QtGui.QGroupBox):
 class EnclosureControlPanel(QtGui.QDialog):
 
   def __init__(self,theParameters,theParent=None):
+    self.m_FileName = None
+
     QtGui.QDialog.__init__(self,theParent)
     aLayout = QtGui.QVBoxLayout()
+
+    aTabLayout = QtGui.QHBoxLayout()
+    aToolBar = self.createToolBar()
+
+    aTabLayout.addWidget(aToolBar)
+
     aTabWidget = QtGui.QTabWidget(self)
 
     aBasicTab = self.createGeneralPanel(theParameters.m_GeneralParameters,aTabWidget)
@@ -378,12 +386,63 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_BackPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),theParameters.m_BackPanel,aTabWidget)   
     aTabWidget.addTab(self.m_BackPanelWidget,self.tr("Back panel")) 
 
-    aLayout.addWidget(aTabWidget)
+    aTabLayout.addWidget(aTabWidget)
+    aLayout.addLayout(aTabLayout)
     aDlgBtns = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok|QtGui.QDialogButtonBox.Cancel)
     aDlgBtns.accepted.connect(self.accept)
     aDlgBtns.rejected.connect(self.reject)
     aLayout.addWidget(aDlgBtns)
     self.setLayout(aLayout)
+    self.setTitle()
+#    self.onSaveAs()
+
+  def createToolBar(self):
+    aToolBar = QtGui.QToolBar(self)
+
+    aToolBar.setOrientation(QtCore.Qt.Vertical)
+    anOpenBtn = QtGui.QToolButton(self)
+    anOpenIcon = QtGui.QIcon(os.path.join(iconsPath,"open.png"))
+    anOpenBtn.setIcon(anOpenIcon)
+    anOpenBtn.setToolTip(self.tr("Open enclosure parameters file"))
+#    anOpenBtn.triggered.connect(self.onOpen)
+    aToolBar.addWidget(anOpenBtn)
+
+    aSaveBtn = QtGui.QToolButton(self)
+    aSaveIcon = QtGui.QIcon(os.path.join(iconsPath,"save.png"))
+    aSaveBtn.setIcon(aSaveIcon)
+    aSaveBtn.setToolTip(self.tr("Save enclosure parameters to file"))
+    aSaveBtn.clicked.connect(self.onSave)
+    aToolBar.addWidget(aSaveBtn)
+
+    aSaveAsBtn = QtGui.QToolButton(self)
+    aSaveAsIcon = QtGui.QIcon(os.path.join(iconsPath,"saveas.png"))
+    aSaveAsBtn.setIcon(aSaveAsIcon)
+    aSaveAsBtn.setToolTip(self.tr("Save enclosure parameters as"))
+    aSaveAsBtn.clicked.connect(self.onSaveAs)
+    aToolBar.addWidget(aSaveAsBtn)
+
+    aRevertBtn = QtGui.QToolButton(self)
+    aRevertIcon = QtGui.QIcon(os.path.join(iconsPath,"reset.png"))
+    aRevertBtn.setIcon(aRevertIcon)
+    aRevertBtn.setToolTip(self.tr("Revert parameters to last saved"))
+#    aRevertBtn.triggered.connect(self.onRevert)
+    aToolBar.addWidget(aRevertBtn)
+
+    aClearBtn = QtGui.QToolButton(self)
+    aClearIcon = QtGui.QIcon(os.path.join(iconsPath,"clear.png"))
+    aClearBtn.setIcon(aClearIcon)
+    aClearBtn.setToolTip(self.tr("Default parameters"))
+#    aClearBtn.triggered.connect(self.onClear)
+    aToolBar.addWidget(aClearBtn)
+
+    aHelpBtn = QtGui.QToolButton(self)
+    aHelpIcon = QtGui.QIcon(os.path.join(iconsPath,"help.png"))
+    aHelpBtn.setIcon(aHelpIcon)
+    aHelpBtn.setToolTip(self.tr("Help"))
+    aHelpBtn.setCheckable(True)
+    aToolBar.addWidget(aHelpBtn)
+
+    return aToolBar
 
   def createEnclosureStandPanel(self,theParameters,theParent=None):
     aBasicPanel = QtGui.QWidget(theParent)
@@ -524,3 +583,71 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_RightPanelWidget.fillParameters(theParameters.m_RightPanel)
     self.m_FrontPanelWidget.fillParameters(theParameters.m_FrontPanel)
     self.m_BackPanelWidget.fillParameters(theParameters.m_BackPanel)
+
+  def setParameters(self,theParameters):
+    self.m_LenghtLE.setText(str(theParameters.m_GeneralParameters.m_Length))
+    self.m_WidthLE.setText(str(theParameters.m_GeneralParameters.m_Width))
+    self.m_HeightLE.setText(str(theParameters.m_GeneralParameters.m_TotalHeight))
+    self.m_BottomHeightLE.setText(str(theParameters.m_GeneralParameters.m_BottomHeight))
+    self.m_NotchHeightLE.setText(str(theParameters.m_GeneralParameters.m_NotchHeight))
+    self.m_HBorderHeightLE.setText(str(theParameters.m_GeneralParameters.m_HorizontalBorderWidth))
+    self.m_VBorderWidthLE.setText(str(theParameters.m_GeneralParameters.m_VerticalBorderWidth))
+    self.m_StandRadiusLE.setText(str(theParameters.m_EnclosureStandParameters.m_StandRaius))
+    self.m_StandOffsetLE.text(str(theParameters.m_EnclosureStandParameters.m_StandOffset))
+    self.m_TopLeftChk.setChecked(theParameters.m_EnclosureStandParameters.m_TopLeftCreate)
+    self.m_TopRightChk.setChecked(theParameters.m_EnclosureStandParameters.m_TopRightCreate)
+    self.m_BottomLeftChk.setChecked(theParameters.m_EnclosureStandParameters.m_BottomLeftCreate)
+    self.m_BottomRightChk.setChecked(theParameters.m_EnclosureStandParameters.m_BottomRightCreate)
+    self.m_CustomStandsWidget.setStands(theParameters.m_CustomStands)
+    self.m_BottomHoleWdg.setParameters(theParameters.m_EnclosureStandParameters.m_BottomHole)
+    self.m_TopHoleWdg.setParameters(theParameters.m_EnclosureStandParameters.m_TopHole)
+    self.m_LeftPanelWidget.setParameters(theParameters.m_LeftPanel)
+    self.m_RightPanelWidget.setParameters(theParameters.m_RightPanel)
+    self.m_FrontPanelWidget.setParameters(theParameters.m_FrontPanel)
+    self.m_BackPanelWidget.setParameters(theParameters.m_BackPanel)
+
+  def setTitle(self):
+    aFileName = self.m_FileName
+    if aFileName is None:
+      aFileName = "Untitled"
+    aTitle = "%s - Enclosure generator" % aFileName
+    self.setWindowTitle(aTitle)
+ 
+  def saveToFile(self,theFileName):
+    aParameters = EnclosureParameters()
+    self.fillParameters(aParameters)
+    print "Save to file %s" % theFileName
+    aRes = aParameters.saveToFile(theFileName)
+    if aRes != True:
+      QtGui.QMessageBox.critical(self,"Can't save enclosure parameters","Can't save enclosure parameters to file %s" % theFileName)
+    else:
+      self.m_FileName = theFileName
+      self.setTitle()
+
+  @QtCore.Slot()
+  def onSave(self):
+    print "onSave"
+    if self.m_FileName is None:
+      self.onSaveAs()
+      return
+    self.saveToFile(self.m_FileName)
+    
+  @QtCore.Slot()
+  def onSaveAs(self):
+    aFileName, aFilter = QtGui.QFileDialog.getSaveFileName(self,"Save enclosure parameters","","Enclosure parameters (*.enc);;All files(*)")
+    if not aFileName:
+      print "File name empty " + aFileName 
+      return
+    self.saveToFile(aFileName)      
+
+  def onOpen(self):
+    pass
+
+  def onRevert(self):
+    pass
+
+  def onClear(self):
+    pass
+
+  def help(self):
+    pass
