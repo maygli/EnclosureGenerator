@@ -416,6 +416,8 @@ class EnclosureControlPanel(QtGui.QDialog):
         self.m_HelpWdg.load(QtCore.QUrl("http://www.google.com"))
         aSplitter.addWidget(self.m_HelpWdg)
         aTabLayout.addWidget(aSplitter)
+    else:
+        aTabLayout.addWidget(aTabWidget)
 
     aLayout.addLayout(aTabLayout)
     aDlgBtns = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok|QtGui.QDialogButtonBox.Cancel)
