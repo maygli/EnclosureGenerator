@@ -6,7 +6,7 @@ FreeCAD plugin to generate enclosures for electronic devices
 
 ## Install
 
-Need to have FreeCAD and QtWebKit installed. Then intall the plugin with
+Need to have FreeCAD installed. Then intall the plugin with
 
 ```
 mkdir -p $HOME/.FreeCAD/Mod
