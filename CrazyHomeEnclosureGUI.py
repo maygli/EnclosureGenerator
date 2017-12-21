@@ -4,23 +4,21 @@
 import os
 import FreeCAD
 import Part
-from PySide import QtGui, QtCore
+from PySide import QtGui, QtCore, QtWebKit
 from CrazyHomeEnclosureData import *
 
 aCurrDir = os.path.dirname(__file__)
 iconsPath = os.path.join( aCurrDir, 'resources' )
 
 class HoleWidget(QtGui.QGroupBox):
-  def __init__(self,theTitle,theParameters,theParent=None):
+  def __init__(self,theTitle,theParent=None):
     QtGui.QGroupBox.__init__(self,theTitle,theParent)
     self.setCheckable(True)                          
-    self.setChecked(theParameters.m_isCreate)
     aLayout = QtGui.QGridLayout()
 
     aRow = 0
     aLayout.addWidget(QtGui.QLabel(self.tr("Hole radius,mm"),self),aRow,0)
     self.m_HoleRadiusLE = QtGui.QLineEdit(self)
-    self.m_HoleRadiusLE.setText(str(theParameters.m_Radius)) 
     aHoleRadiusVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_HoleRadiusLE)
     self.m_HoleRadiusLE.setValidator(aHoleRadiusVld)
     aLayout.addWidget(self.m_HoleRadiusLE,aRow,1)
@@ -28,7 +26,6 @@ class HoleWidget(QtGui.QGroupBox):
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Hole height,mm"),self),aRow,0)
     self.m_HoleHeightLE = QtGui.QLineEdit(self)
-    self.m_HoleHeightLE.setText(str(theParameters.m_Height))
     aHoleHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_HoleRadiusLE)
     self.m_HoleHeightLE.setValidator(aHoleHeightVld)
     aLayout.addWidget(self.m_HoleHeightLE,aRow,1)
@@ -41,11 +38,17 @@ class HoleWidget(QtGui.QGroupBox):
     theParameters.m_Radius = float(self.m_HoleRadiusLE.text())
     theParameters.m_Height = float(self.m_HoleHeightLE.text())
 
+  def setParameters(self,theParameters):
+    self.setChecked(theParameters.m_isCreate)
+    self.m_HoleRadiusLE.setText(str(theParameters.m_Radius))
+    self.m_HoleHeightLE.setText(str(theParameters.m_Height))
+
 class HoleParametersDialog(QtGui.QDialog):
   def __init__(self,theHoleParameters,theParent=None):
     QtGui.QDialog.__init__(self,theParent)
     aLayout = QtGui.QVBoxLayout()
-    self.m_HoleWidget = HoleWidget(self.tr("Create hole"),theHoleParameters,self)
+    self.m_HoleWidget = HoleWidget(self.tr("Create hole"),self)
+    self.m_HoleWidget.setParameters(theHoleParameters)
     aLayout.addWidget(self.m_HoleWidget)
     aDlgBtns = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok|QtGui.QDialogButtonBox.Cancel)
     aDlgBtns.accepted.connect(self.accept)
@@ -102,14 +105,12 @@ class HoleParametersViewWidget(QtGui.QWidget):
     return self.m_Parameters
 
 class CustomStandsConfigureTable(QtGui.QTableWidget):
-  def __init__(self,theCustomStands,theParent=None):
+  def __init__(self,theParent=None):
     QtGui.QTableWidget.__init__(self,theParent)
     aColumns = ["Type","X","Y","Radius","Height","Hole"]
     self.setColumnCount(len(aColumns))
     self.setHorizontalHeaderLabels(aColumns)
     self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-    for aCustomStand in theCustomStands:
-      self.appendRow(aCustomStand)
 
   def appendRow(self, theCustomStand):
     aRow = self.rowCount()
@@ -201,6 +202,11 @@ class CustomStandsConfigureTable(QtGui.QTableWidget):
       aRow = aRows[i]
       self.removeRow(aRow.row())
 
+  def removeAll(self):
+    aRows = self.rowCount()
+    for i in range(aRows-1,-1,-1):
+      self.removeRow(i)
+
   def sizeHintForRow(self,theRow):
     aHeight = -1
     for i in range(self.columnCount()):
@@ -225,7 +231,7 @@ class CustomStandsWidget(QtGui.QWidget):
   def __init__(self,theCustomStands,theParent=None):
     QtGui.QWidget.__init__(self,theParent)
     aLayout = QtGui.QHBoxLayout()
-    self.m_TableWidget = CustomStandsConfigureTable(theCustomStands,self)
+    self.m_TableWidget = CustomStandsConfigureTable(self)
     aBtnsLayout = QtGui.QVBoxLayout()
     anAddBtn = QtGui.QToolButton(self)
     anAddIcon = QtGui.QIcon(os.path.join(iconsPath,"add.png"))
@@ -254,22 +260,25 @@ class CustomStandsWidget(QtGui.QWidget):
   def getStands(self):
     return self.m_TableWidget.getStands()
 
+  def setStands(self,theCustomStands):
+    self.m_TableWidget.removeAll()
+    for aCustomStand in theCustomStands:
+      self.m_TableWidget.appendRow(aCustomStand)
+
 class EnclosurePanelWidget(QtGui.QGroupBox):
   @QtCore.Slot()
   def upateStates(self):
      self.m_BorderWidthLE.setEnabled(self.m_DefaultBorderWidthChk.isChecked()==False)
      self.m_OffsetLE.setEnabled(self.m_CenterPanelChk.isChecked()==False)
 
-  def __init__(self,theTitle,theParameters,theParent=None):
+  def __init__(self,theTitle,theParent=None):
     QtGui.QGroupBox.__init__(self,theTitle,theParent)
     self.setCheckable(True)
-    self.setChecked(theParameters.m_isCreate)
     aLayout = QtGui.QGridLayout()
 
     aRow = 0
     aLayout.addWidget(QtGui.QLabel(self.tr("Length,mm"),self),aRow,0)
     self.m_LengthLE = QtGui.QLineEdit(self)
-    self.m_LengthLE.setText(str(theParameters.m_Length)) 
     aLengthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_LengthLE)
     self.m_LengthLE.setValidator(aLengthVld)
     aLayout.addWidget(self.m_LengthLE,aRow,1)
@@ -277,7 +286,6 @@ class EnclosurePanelWidget(QtGui.QGroupBox):
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Height,mm"),self),aRow,0)
     self.m_HeightLE = QtGui.QLineEdit(self)
-    self.m_HeightLE.setText(str(theParameters.m_Height)) 
     aHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_HeightLE)
     self.m_HeightLE.setValidator(aHeightVld)
     aLayout.addWidget(self.m_HeightLE,aRow,1)
@@ -285,14 +293,12 @@ class EnclosurePanelWidget(QtGui.QGroupBox):
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Center panel horizontally"),self),aRow,0)
     self.m_CenterPanelChk = QtGui.QCheckBox(self)
-    self.m_CenterPanelChk.setChecked(theParameters.m_isCenterPanel)
     self.m_CenterPanelChk.toggled.connect(self.upateStates)
     aLayout.addWidget(self.m_CenterPanelChk,aRow,1)
 
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Horizontal offset,mm"),self),aRow,0)
     self.m_OffsetLE = QtGui.QLineEdit(self)
-    self.m_OffsetLE.setText(str(theParameters.m_Offset)) 
     aOffsetVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_OffsetLE)
     self.m_OffsetLE.setValidator(aOffsetVld)
     aLayout.addWidget(self.m_OffsetLE,aRow,1)
@@ -300,7 +306,6 @@ class EnclosurePanelWidget(QtGui.QGroupBox):
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Border height,mm"),self),aRow,0)
     self.m_BorderHeightLE = QtGui.QLineEdit(self)
-    self.m_BorderHeightLE.setText(str(theParameters.m_BorderHeight)) 
     aBorderHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_BorderHeightLE)
     self.m_BorderHeightLE.setValidator(aBorderHeightVld)
     aLayout.addWidget(self.m_BorderHeightLE,aRow,1)
@@ -308,14 +313,12 @@ class EnclosurePanelWidget(QtGui.QGroupBox):
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Default border width"),self),aRow,0)
     self.m_DefaultBorderWidthChk = QtGui.QCheckBox(self)
-    self.m_DefaultBorderWidthChk.setChecked(theParameters.m_isDefaultBorderWidth)
     aLayout.addWidget(self.m_DefaultBorderWidthChk,aRow,1)
     self.m_DefaultBorderWidthChk.toggled.connect(self.upateStates)
 
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Border width,mm"),self),aRow,0)
     self.m_BorderWidthLE = QtGui.QLineEdit(self)
-    self.m_BorderWidthLE.setText(str(theParameters.m_BorderWidth)) 
     aBorderWidthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_BorderWidthLE)
     self.m_BorderWidthLE.setValidator(aBorderWidthVld)
     aLayout.addWidget(self.m_BorderWidthLE,aRow,1)
@@ -323,13 +326,11 @@ class EnclosurePanelWidget(QtGui.QGroupBox):
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Simplify panel"),self),aRow,0)
     self.m_SimplifyPanelChk = QtGui.QCheckBox(self)
-    self.m_SimplifyPanelChk.setChecked(theParameters.m_isCreateSimplePanel)
     aLayout.addWidget(self.m_SimplifyPanelChk,aRow,1)
 
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Reduce border width,mm"),self),aRow,0)
     self.m_ReduceBorderWidthLE = QtGui.QLineEdit(self)
-    self.m_ReduceBorderWidthLE.setText(str(theParameters.m_BorderWidthReduce)) 
     aReduceBorderWidthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_ReduceBorderWidthLE)
     self.m_ReduceBorderWidthLE.setValidator(aReduceBorderWidthVld)
     aLayout.addWidget(self.m_ReduceBorderWidthLE,aRow,1)
@@ -349,13 +350,26 @@ class EnclosurePanelWidget(QtGui.QGroupBox):
     theParameters.m_isCreateSimplePanel = self.m_SimplifyPanelChk.isChecked()
     theParameters.m_BorderWidthReduce = float(self.m_ReduceBorderWidthLE.text())
 
+
+  def setParameters(self, theParameters):
+    self.setChecked(theParameters.m_isCreate) 
+    self.m_LengthLE.setText(str(theParameters.m_Length))
+    self.m_HeightLE.setText(str(theParameters.m_Height))
+    self.m_CenterPanelChk.setChecked(theParameters.m_isCenterPanel)
+    self.m_OffsetLE.setText(str(theParameters.m_Offset))
+    self.m_BorderHeightLE.setText(str(theParameters.m_BorderHeight))
+    self.m_DefaultBorderWidthChk.setChecked(theParameters.m_isDefaultBorderWidth)
+    self.m_BorderWidthLE.setText(str(theParameters.m_BorderWidth))
+    self.m_SimplifyPanelChk.setChecked(theParameters.m_isCreateSimplePanel)
+    self.m_ReduceBorderWidthLE.setText(str(theParameters.m_BorderWidthReduce))
+    self.upateStates()
   
 class EnclosureControlPanel(QtGui.QDialog):
 
-  def __init__(self,theParameters,theParent=None):
+  def __init__(self,theParent=None):
+    QtGui.QDialog.__init__(self,theParent)
     self.m_FileName = None
 
-    QtGui.QDialog.__init__(self,theParent)
     aLayout = QtGui.QVBoxLayout()
 
     aTabLayout = QtGui.QHBoxLayout()
@@ -363,30 +377,38 @@ class EnclosureControlPanel(QtGui.QDialog):
 
     aTabLayout.addWidget(aToolBar)
 
+    aSplitter = QtGui.QSplitter(self)
+
     aTabWidget = QtGui.QTabWidget(self)
 
-    aBasicTab = self.createGeneralPanel(theParameters.m_GeneralParameters,aTabWidget)
+    aBasicTab = self.createGeneralPanel(aTabWidget)
     aTabWidget.addTab(aBasicTab,self.tr("General")) 
 
-    anEnclosureStandPanel = self.createEnclosureStandPanel(theParameters.m_EnclosureStandParameters,aTabWidget)
+    anEnclosureStandPanel = self.createEnclosureStandPanel(aTabWidget)
     aTabWidget.addTab(anEnclosureStandPanel,self.tr("Enclosure stands")) 
 
-    self.m_CustomStandsWidget = CustomStandsWidget(theParameters.m_CustomStands,self)
+    self.m_CustomStandsWidget = CustomStandsWidget(self)
     aTabWidget.addTab(self.m_CustomStandsWidget,self.tr("Custom stands")) 
     
-    self.m_LeftPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),theParameters.m_LeftPanel,aTabWidget)   
+    self.m_LeftPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),aTabWidget)   
     aTabWidget.addTab(self.m_LeftPanelWidget,self.tr("Left panel")) 
 
-    self.m_RightPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),theParameters.m_RightPanel,aTabWidget)   
+    self.m_RightPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),aTabWidget)   
     aTabWidget.addTab(self.m_RightPanelWidget,self.tr("Right panel")) 
 
-    self.m_FrontPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),theParameters.m_FrontPanel,aTabWidget)   
+    self.m_FrontPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),aTabWidget)   
     aTabWidget.addTab(self.m_FrontPanelWidget,self.tr("Front panel")) 
 
-    self.m_BackPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),theParameters.m_BackPanel,aTabWidget)   
+    self.m_BackPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),aTabWidget)   
     aTabWidget.addTab(self.m_BackPanelWidget,self.tr("Back panel")) 
 
-    aTabLayout.addWidget(aTabWidget)
+    aSplitter.addWidget(aTabWidget)
+
+    self.m_HelpWdg = QtWebKit.QWebView(self)
+    self.m_HelpWdg.load(QtCore.QUrl("http://www.google.com"))
+    aSplitter.addWidget(self.m_HelpWdg)
+    aTabLayout.addWidget(aSplitter)
+
     aLayout.addLayout(aTabLayout)
     aDlgBtns = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok|QtGui.QDialogButtonBox.Cancel)
     aDlgBtns.accepted.connect(self.accept)
@@ -394,6 +416,7 @@ class EnclosureControlPanel(QtGui.QDialog):
     aLayout.addWidget(aDlgBtns)
     self.setLayout(aLayout)
     self.setTitle()
+    self.onHelp()
 #    self.onSaveAs()
 
   def createToolBar(self):
@@ -425,26 +448,27 @@ class EnclosureControlPanel(QtGui.QDialog):
     aRevertIcon = QtGui.QIcon(os.path.join(iconsPath,"reset.png"))
     aRevertBtn.setIcon(aRevertIcon)
     aRevertBtn.setToolTip(self.tr("Revert parameters to last saved"))
-#    aRevertBtn.triggered.connect(self.onRevert)
+    aRevertBtn.clicked.connect(self.onRevert)
     aToolBar.addWidget(aRevertBtn)
 
     aClearBtn = QtGui.QToolButton(self)
     aClearIcon = QtGui.QIcon(os.path.join(iconsPath,"clear.png"))
     aClearBtn.setIcon(aClearIcon)
     aClearBtn.setToolTip(self.tr("Default parameters"))
-#    aClearBtn.triggered.connect(self.onClear)
+    aClearBtn.clicked.connect(self.onClear)
     aToolBar.addWidget(aClearBtn)
 
-    aHelpBtn = QtGui.QToolButton(self)
+    self.m_HelpBtn = QtGui.QToolButton(self)
     aHelpIcon = QtGui.QIcon(os.path.join(iconsPath,"help.png"))
-    aHelpBtn.setIcon(aHelpIcon)
-    aHelpBtn.setToolTip(self.tr("Help"))
-    aHelpBtn.setCheckable(True)
-    aToolBar.addWidget(aHelpBtn)
+    self.m_HelpBtn.setIcon(aHelpIcon)
+    self.m_HelpBtn.setToolTip(self.tr("Help"))
+    self.m_HelpBtn.setCheckable(True)
+    aToolBar.addWidget(self.m_HelpBtn)
+    self.m_HelpBtn.toggled.connect(self.onHelp)
 
     return aToolBar
 
-  def createEnclosureStandPanel(self,theParameters,theParent=None):
+  def createEnclosureStandPanel(self,theParent=None):
     aBasicPanel = QtGui.QWidget(theParent)
     aLayout = QtGui.QGridLayout()
 
@@ -453,7 +477,6 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_StandRadiusLE = QtGui.QLineEdit(aBasicPanel)
     aStandRadiusVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_StandRadiusLE)
     self.m_StandRadiusLE.setValidator(aStandRadiusVld)
-    self.m_StandRadiusLE.setText(str(theParameters.m_StandRadius))
     aLayout.addWidget(self.m_StandRadiusLE,aRow,1) 
 
     aRow = aRow + 1
@@ -461,45 +484,40 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_StandOffsetLE = QtGui.QLineEdit(aBasicPanel)
     aStandOffsetVld = QtGui.QDoubleValidator(-1000000000,1000000000.,15,self.m_StandOffsetLE)
     self.m_StandOffsetLE.setValidator(aStandRadiusVld)
-    self.m_StandOffsetLE.setText(str(theParameters.m_StandOffset))
     aLayout.addWidget(self.m_StandOffsetLE,aRow,1) 
 
     aRow = aRow+1
     aLayout.addWidget(QtGui.QLabel(self.tr("Bottom left stand,mm"),aBasicPanel),aRow,0)
     self.m_BottomLeftChk = QtGui.QCheckBox(aBasicPanel)
-    self.m_BottomLeftChk.setChecked(theParameters.m_BottomLeftCreate)
     aLayout.addWidget(self.m_BottomLeftChk,aRow,1)
 
     aRow = aRow+1
     aLayout.addWidget(QtGui.QLabel(self.tr("Bottom right stand,mm"),aBasicPanel),aRow,0)
     self.m_BottomRightChk = QtGui.QCheckBox(aBasicPanel)
-    self.m_BottomRightChk.setChecked(theParameters.m_BottomRightCreate)
     aLayout.addWidget(self.m_BottomRightChk,aRow,1)
 
     aRow = aRow+1
     aLayout.addWidget(QtGui.QLabel(self.tr("Top left stand,mm"),aBasicPanel),aRow,0)
     self.m_TopLeftChk = QtGui.QCheckBox(aBasicPanel)
-    self.m_TopLeftChk.setChecked(theParameters.m_TopLeftCreate)
     aLayout.addWidget(self.m_TopLeftChk,aRow,1)
 
     aRow = aRow+1
     aLayout.addWidget(QtGui.QLabel(self.tr("Top right stand,mm"),aBasicPanel),aRow,0)
     self.m_TopRightChk = QtGui.QCheckBox(aBasicPanel)
-    self.m_TopRightChk.setChecked(theParameters.m_TopRightCreate)
     aLayout.addWidget(self.m_TopRightChk,aRow,1)
 
     aRow = aRow+1
-    self.m_BottomHoleWdg = HoleWidget(self.tr("Bottom hole"),theParameters.m_BottomHole,aBasicPanel)
+    self.m_BottomHoleWdg = HoleWidget(self.tr("Bottom hole"),aBasicPanel)
     aLayout.addWidget(self.m_BottomHoleWdg,aRow,0,1,2)
 
     aRow = aRow+1
-    self.m_TopHoleWdg = HoleWidget(self.tr("Top hole"),theParameters.m_TopHole,aBasicPanel)
+    self.m_TopHoleWdg = HoleWidget(self.tr("Top hole"),aBasicPanel)
     aLayout.addWidget(self.m_TopHoleWdg,aRow,0,1,2)
 
     aBasicPanel.setLayout(aLayout)
     return aBasicPanel
 
-  def createGeneralPanel(self,theParameters,theParent=None):
+  def createGeneralPanel(self,theParent=None):
     aBasicPanel = QtGui.QWidget(theParent)
     aLayout = QtGui.QGridLayout()
 
@@ -508,7 +526,6 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_LenghtLE = QtGui.QLineEdit(aBasicPanel)
     aLenghtVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_LenghtLE)
     self.m_LenghtLE.setValidator(aLenghtVld)
-    self.m_LenghtLE.setText(str(theParameters.m_Length))
     aLayout.addWidget(self.m_LenghtLE,aRow,1) 
 
     aRow = aRow + 1
@@ -516,7 +533,6 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_WidthLE = QtGui.QLineEdit(aBasicPanel)
     aWidthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_WidthLE)
     self.m_WidthLE.setValidator(aWidthVld)
-    self.m_WidthLE.setText(str(theParameters.m_Width))
     aLayout.addWidget(self.m_WidthLE,aRow,1) 
 
     aRow = aRow + 1
@@ -524,7 +540,6 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_HeightLE = QtGui.QLineEdit(aBasicPanel)
     aHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_HeightLE)
     self.m_HeightLE.setValidator(aHeightVld)
-    self.m_HeightLE.setText(str(theParameters.m_TotalHeight))
     aLayout.addWidget(self.m_HeightLE,aRow,1) 
 
     aRow = aRow + 1
@@ -532,7 +547,6 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_BottomHeightLE = QtGui.QLineEdit(aBasicPanel)
     aBottomHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_BottomHeightLE)
     self.m_BottomHeightLE.setValidator(aBottomHeightVld)
-    self.m_BottomHeightLE.setText(str(theParameters.m_BottomHeight))
     aLayout.addWidget(self.m_BottomHeightLE,aRow,1) 
 
     aRow = aRow + 1
@@ -540,7 +554,6 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_NotchHeightLE = QtGui.QLineEdit(aBasicPanel)
     aNotchHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_NotchHeightLE)
     self.m_NotchHeightLE.setValidator(aNotchHeightVld)
-    self.m_NotchHeightLE.setText(str(theParameters.m_NotchHeight))
     aLayout.addWidget(self.m_NotchHeightLE,aRow,1) 
 
     aRow = aRow + 1
@@ -548,7 +561,6 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_HBorderHeightLE = QtGui.QLineEdit(aBasicPanel)
     aHBorderHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_HBorderHeightLE)
     self.m_HBorderHeightLE.setValidator(aHBorderHeightVld)
-    self.m_HBorderHeightLE.setText(str(theParameters.m_HorizontalBorderWidth))
     aLayout.addWidget(self.m_HBorderHeightLE,aRow,1) 
 
     aRow = aRow + 1
@@ -556,7 +568,6 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_VBorderWidthLE = QtGui.QLineEdit(aBasicPanel)
     aVBorderWidthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_VBorderWidthLE)
     self.m_VBorderWidthLE.setValidator(aVBorderWidthVld)
-    self.m_VBorderWidthLE.setText(str(theParameters.m_VerticalBorderWidth))
     aLayout.addWidget(self.m_VBorderWidthLE,aRow,1) 
 
     aBasicPanel.setLayout(aLayout)
@@ -592,8 +603,8 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_NotchHeightLE.setText(str(theParameters.m_GeneralParameters.m_NotchHeight))
     self.m_HBorderHeightLE.setText(str(theParameters.m_GeneralParameters.m_HorizontalBorderWidth))
     self.m_VBorderWidthLE.setText(str(theParameters.m_GeneralParameters.m_VerticalBorderWidth))
-    self.m_StandRadiusLE.setText(str(theParameters.m_EnclosureStandParameters.m_StandRaius))
-    self.m_StandOffsetLE.text(str(theParameters.m_EnclosureStandParameters.m_StandOffset))
+    self.m_StandRadiusLE.setText(str(theParameters.m_EnclosureStandParameters.m_StandRadius))
+    self.m_StandOffsetLE.setText(str(theParameters.m_EnclosureStandParameters.m_StandOffset))
     self.m_TopLeftChk.setChecked(theParameters.m_EnclosureStandParameters.m_TopLeftCreate)
     self.m_TopRightChk.setChecked(theParameters.m_EnclosureStandParameters.m_TopRightCreate)
     self.m_BottomLeftChk.setChecked(theParameters.m_EnclosureStandParameters.m_BottomLeftCreate)
@@ -644,10 +655,16 @@ class EnclosureControlPanel(QtGui.QDialog):
     pass
 
   def onRevert(self):
+    aParameters = EnclosureParameters()
+    aParameters.restoreFromSettings()
+    self.setParameters(aParameters)
     pass
 
   def onClear(self):
+    aParameters = EnclosureParameters()
+    self.setParameters(aParameters)
     pass
 
-  def help(self):
+  def onHelp(self):
+    self.m_HelpWdg.setVisible(self.m_HelpBtn.isChecked())
     pass

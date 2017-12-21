@@ -66,7 +66,8 @@ static const char *test_icon[]={
   def Activated(self):
     aParameters = CrazyHomeEnclosureData.EnclosureParameters()
     aParameters.restoreFromSettings()
-    aControlPanel = CrazyHomeEnclosureGUI.EnclosureControlPanel(aParameters)
+    aControlPanel = CrazyHomeEnclosureGUI.EnclosureControlPanel()
+    aControlPanel.setParameters(aParameters)
     aRes = aControlPanel.exec_()
     aControlPanel.fillParameters(aParameters)
     aParameters.saveToSettings()
