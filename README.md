@@ -2,9 +2,7 @@
 
 FreeCAD plugin to generate enclosures for electronic devices
 
-## Screenshot
-
-Please add one
+![Screenshot](https://user-images.githubusercontent.com/2480569/34254794-0e0b4862-e64e-11e7-87c1-a29a0f90178a.png)
 
 ## Install
 
