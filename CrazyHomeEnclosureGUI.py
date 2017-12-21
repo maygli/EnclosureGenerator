@@ -4,7 +4,14 @@
 import os
 import FreeCAD
 import Part
-from PySide import QtGui, QtCore, QtWebKit
+from PySide import QtGui, QtCore
+
+try:
+    from PySide import QtWebKit
+    has_qtwebkit = True
+except:
+    has_qtwebkit = False
+
 from CrazyHomeEnclosureData import *
 
 aCurrDir = os.path.dirname(__file__)
@@ -404,10 +411,13 @@ class EnclosureControlPanel(QtGui.QDialog):
 
     aSplitter.addWidget(aTabWidget)
 
-    self.m_HelpWdg = QtWebKit.QWebView(self)
-    self.m_HelpWdg.load(QtCore.QUrl("http://www.google.com"))
-    aSplitter.addWidget(self.m_HelpWdg)
-    aTabLayout.addWidget(aSplitter)
+    if(has_qtwebkit):
+        self.m_HelpWdg = QtWebKit.QWebView(self)
+        self.m_HelpWdg.load(QtCore.QUrl("http://www.google.com"))
+        aSplitter.addWidget(self.m_HelpWdg)
+        aTabLayout.addWidget(aSplitter)
+    else:
+        aTabLayout.addWidget(aTabWidget)
 
     aLayout.addLayout(aTabLayout)
     aDlgBtns = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok|QtGui.QDialogButtonBox.Cancel)
@@ -416,7 +426,8 @@ class EnclosureControlPanel(QtGui.QDialog):
     aLayout.addWidget(aDlgBtns)
     self.setLayout(aLayout)
     self.setTitle()
-    self.onHelp()
+    if(has_qtwebkit):
+        self.onHelp()
 #    self.onSaveAs()
 
   def createToolBar(self):
