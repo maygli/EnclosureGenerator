@@ -4,11 +4,12 @@
 import os
 import FreeCAD
 import Part
-from PySide import QtGui, QtCore, QtWebKit
+from PySide import QtGui, QtCore
 from CrazyHomeEnclosureData import *
 
 aCurrDir = os.path.dirname(__file__)
 iconsPath = os.path.join( aCurrDir, 'resources' )
+helpPath = os.path.join( aCurrDir, 'resources', 'help' )
 
 class HoleWidget(QtGui.QGroupBox):
   def __init__(self,theTitle,theParent=None):
@@ -404,8 +405,11 @@ class EnclosureControlPanel(QtGui.QDialog):
 
     aSplitter.addWidget(aTabWidget)
 
-    self.m_HelpWdg = QtWebKit.QWebView(self)
-    self.m_HelpWdg.load(QtCore.QUrl("http://www.google.com"))
+    self.m_HelpWdg = QtGui.QTextBrowser(self)
+    self.m_HelpWdg.setSearchPaths([helpPath])
+    self.m_HelpWdg.setOpenLinks(True)
+    self.m_HelpWdg.setOpenExternalLinks(True)
+    self.m_HelpWdg.setSource(QtCore.QUrl.fromLocalFile("help.html"))
     aSplitter.addWidget(self.m_HelpWdg)
     aTabLayout.addWidget(aSplitter)
 
