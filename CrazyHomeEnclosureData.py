@@ -306,6 +306,13 @@ class EnclosureParameters:
     aSett = QtCore.QSettings(OrganizationName,AppName)
     self.restore(aSett)
 
+  def openFile(self,theFileName):
+    aSett = QtCore.QSettings(theFileName, QtCore.QSettings.IniFormat)
+    self.restore(aSett)
+    if aSett.status() != aSett.NoError:
+      return False
+    return True 
+
   def restore(self,theSett):
     self.m_GeneralParameters.restoreFromSettings(theSett)
     self.m_EnclosureStandParameters.restoreFromSettings(theSett)

@@ -431,7 +431,7 @@ class EnclosureControlPanel(QtGui.QDialog):
     anOpenIcon = QtGui.QIcon(os.path.join(iconsPath,"open.png"))
     anOpenBtn.setIcon(anOpenIcon)
     anOpenBtn.setToolTip(self.tr("Open enclosure parameters file"))
-#    anOpenBtn.triggered.connect(self.onOpen)
+    anOpenBtn.clicked.connect(self.onOpen)
     aToolBar.addWidget(anOpenBtn)
 
     aSaveBtn = QtGui.QToolButton(self)
@@ -654,6 +654,17 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.saveToFile(aFileName)      
 
   def onOpen(self):
+    aFileName, aFilter = QtGui.QFileDialog.getOpenFileName(self,"Open enclosure parameters","","Enclosure parameters (*.enc);;All files(*)")
+    if not aFileName:
+      return
+    aParameters = EnclosureParameters()
+    aRes = aParameters.openFile(aFileName)
+    if aRes != True:
+      QtGui.QMessageBox.critical(self,"Can't open enclosure parameters","Can't open enclosure parameters file %s" % theFileName)
+    else:
+      self.setParameters(aParameters)
+      self.m_FileName = aFileName
+      self.setTitle()
     pass
 
   def onRevert(self):
