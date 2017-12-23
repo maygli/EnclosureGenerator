@@ -641,7 +641,6 @@ class EnclosureControlPanel(QtGui.QDialog):
 
   @QtCore.Slot()
   def onSave(self):
-    print "onSave"
     if self.m_FileName is None:
       self.onSaveAs()
       return
@@ -651,7 +650,6 @@ class EnclosureControlPanel(QtGui.QDialog):
   def onSaveAs(self):
     aFileName, aFilter = QtGui.QFileDialog.getSaveFileName(self,"Save enclosure parameters","","Enclosure parameters (*.enc);;All files(*)")
     if not aFileName:
-      print "File name empty " + aFileName 
       return
     self.saveToFile(aFileName)      
 

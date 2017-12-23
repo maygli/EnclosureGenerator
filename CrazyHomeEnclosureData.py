@@ -110,18 +110,55 @@ class CustomStandParameters:
     theSett.endGroup()
 
 class EarParameters:
-  BOTTOM_BASE=0
-  TOP_BASE=1
-  FRONT_BASE=2
-  BACK_BASE=3
-  LEFT_BASE=4
-  RIGHT_BASE=5
+  BOTTOM_DIRECTION=0
+  TOP_DIRECTION=1
+  FRONT_DIRECTION=2
+  BACK_DIRECTION=3
+  LEFT_DIRECTION=4
+  RIGHT_DIRECTION=5
+  CUSTOM_OFFSET=6
   def __init__(self):
-    self.m_Base = self.BOTTOM_BASE
     self.m_Length = 12.
     self.m_Width = 12.
     self.m_Height = 3.
+    self.m_Base = self.BOTTOM_DIRECTION
+    self.m_Direction = self.LEFT_DIRECTION
+    self.m_Align = self.FRONT_DIRECTION
+    self.m_Offset = 0.
+    self.m_HoleX = 6.
+    self.m_HoleY = 6.
+    self.m_isCenterHole = True
     self.m_Hole = HoleParameters()
+
+  def saveToSettings(self,theSett,theGroup):
+    theSett.beginGroup(theGroup)
+    theSett.setValue("Length",self.m_Length)
+    theSett.setValue("Width",self.m_Width)
+    theSett.setValue("Height",self.m_Height)
+    theSett.setValue("Base",self.m_Base)
+    theSett.setValue("Direction",self.m_Direction)
+    theSett.setValue("Align",self.m_Align)
+    theSett.setValue("Offset",self.m_Offset)
+    theSett.setValue("HoleX",self.m_HoleX)
+    theSett.setValue("HoleY",self.m_HoleY)
+    theSett.setValue("isCenterHole",self.m_isCenterHole)
+    self.m_Hole.saveToSettings(theSett,"Hole")
+    theSett.endGroup()
+
+  def restoreFromSettings(self,theSett,theGroup):
+    theSett.beginGroup(theGroup)
+    self.m_Length = float(theSett.value("Length",12.))
+    self.m_Width = float(theSett.value("Width",12.))
+    self.m_Height = float(theSett.value("Height",3.))
+    self.m_Base = int(theSett.value("Base",self.BOTTOM_DIRECTION))
+    self.m_Direction = int(theSett.value("Direction",self.LEFT_DIRECTION))
+    self.m_Align = int(theSett.value("Align",self.BACK_DIRECTION))
+    self.m_Offset = float(theSett.value("Offset",0.))
+    self.m_HoleX = float(theSett.value("HoleX",6.))
+    self.m_HoleY = float(theSett.value("HoleY",6.))
+    self.m_isCenterHole = getSettingsBool(theSett,"isCenterHole",True)
+    self.m_Hole.restoreFromSettings(theSett,"Hole")
+    theSett.endGroup()
 
 class PanelParameters:
   def __init__(self):
@@ -226,13 +263,10 @@ class EnclosureParameters:
     aCustStand.m_Hole.m_Direction = HoleParameters.TOP_DIRECTION
     self.m_CustomStands.append(aCustStand)
     self.m_Ears = []
-    anEar = EarParameters()
-    self.m_Ears.append(anEar)
 
   def saveToFile(self,theFileName):
     aSett = QtCore.QSettings(theFileName, QtCore.QSettings.IniFormat)
     self.save(aSett)
-    print "Save to file %s" % theFileName
     aSett.sync()
     if aSett.status() != aSett.NoError:
       return False
@@ -258,20 +292,61 @@ class EnclosureParameters:
       aCustStand.saveToSettings(theSett,aGroup)
       anIndx = anIndx + 1
     theSett.endGroup()
+    anEarsCount = len(self.m_Ears)
+    theSett.setValue("EarsCount",anEarsCount)
+    theSett.beginGroup("Ears")
+    anIndx = 1
+    for anEar in self.m_Ears:
+      aGroup = "Ear%s" % str(anIndx)
+      anEar.saveToSettings(theSett,aGroup)
+      anIndx = anIndx + 1
+    theSett.endGroup()
 
   def restoreFromSettings(self):
     aSett = QtCore.QSettings(OrganizationName,AppName)
+    self.restore(aSett)
 
-    self.m_GeneralParameters.restoreFromSettings(aSett)
-    self.m_EnclosureStandParameters.restoreFromSettings(aSett)
-    self.m_LeftPanel.restoreFromSettings(aSett,"LeftPanel")
-    self.m_RightPanel.restoreFromSettings(aSett,"RightPanel")
-    self.m_FrontPanel.restoreFromSettings(aSett,"FrontPanel")
-    self.m_BackPanel.restoreFromSettings(aSett,"BackPanel")
+  def restore(self,theSett):
+    self.m_GeneralParameters.restoreFromSettings(theSett)
+    self.m_EnclosureStandParameters.restoreFromSettings(theSett)
+    self.m_LeftPanel.restoreFromSettings(theSett,"LeftPanel")
+    self.m_RightPanel.restoreFromSettings(theSett,"RightPanel")
+    self.m_FrontPanel.restoreFromSettings(theSett,"FrontPanel")
+    self.m_BackPanel.restoreFromSettings(theSett,"BackPanel")
     self.m_CustomStands = []
-    aCustomStandsCount = int(aSett.value("CustomStandsCount",0))
+    aCustomStandsCount = int(theSett.value("CustomStandsCount",0))
+    theSett.beginGroup("CustomStands")
     for anIndx in range(aCustomStandsCount):
       aCustStand = CustomStandParameters()
       aGroup = "CustomStand%s" % str(anIndx+1)
-      aCustStand.restoreFromSettings(aSett,aGroup)
-      self.m_CustomStands.append(aCustStand)  
+      aCustStand.restoreFromSettings(theSett,aGroup)
+      self.m_CustomStands.append(aCustStand)
+    theSett.endGroup()
+    self.m_Ears = []
+    aCustomStandsCount = int(theSett.value("EarsCount",0))
+    theSett.beginGroup("Ears")
+    for anIndx in range(aCustomStandsCount):
+      anEar = EarParameters()
+      aGroup = "Ear%s" % str(anIndx+1)
+      anEar.restoreFromSettings(theSett,aGroup)
+      self.m_Ears.append(anEar)
+    theSett.endGroup()
+#For test only
+#    aBase = EarParameters.TOP_DIRECTION
+#    anEar = EarParameters()
+#    anEar.m_Base = aBase
+#    self.m_Ears.append(anEar)
+#    anEar = EarParameters()
+#    anEar.m_Base = aBase
+#    anEar.m_Align = EarParameters.BACK_DIRECTION
+#    anEar.m_Width = 15.
+#    self.m_Ears.append(anEar)
+#    anEar = EarParameters()
+#    anEar.m_Base = aBase
+#    anEar.m_Direction = EarParameters.RIGHT_DIRECTION
+#    self.m_Ears.append(anEar)
+#    anEar = EarParameters()
+#    anEar.m_Base = aBase
+#    anEar.m_Direction = EarParameters.RIGHT_DIRECTION
+#   anEar.m_Width = 15.
+#    self.m_Ears.append(anEar)

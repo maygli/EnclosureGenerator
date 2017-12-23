@@ -52,6 +52,10 @@ class EnclosureGenerator:
     for aCustomStand in self.m_Parameters.m_CustomStands:
       aTopBase,aBottomBase = self.createVerticalCustomStand(aTopBase,aBottomBase,anIndx,aCustomStand)
       anIndx = anIndx + 1
+    anIndx = 1
+    for anEar in self.m_Parameters.m_Ears:
+      self.createEar(anEar,anIndx)
+      anIndx = anIndx + 1
     FreeCAD.ActiveDocument.recompute()
                                                                                                                       
   def getInmm(self,theVal):                                                                                            
@@ -379,9 +383,30 @@ class EnclosureGenerator:
     aLength = theParameters.m_Length
     aWidth = theParameters.m_Width
     aHeight = theParameters.m_Height
-    if theParameters.m_Base == EarParameters.FRONT_BASE or theParameters.m_Base == EarParameters.BACK_BASE:
+    aBaseX = 0;
+    aBaseY = 0;
+    aBaseZ = 0;
+    if theParameters.m_Base == EarParameters.TOP_DIRECTION or theParameters.m_Base == EarParameters.BOTTOM_DIRECTION:
+      if theParameters.m_Base == EarParameters.TOP_DIRECTION:
+        aBaseZ = self.m_Parameters.m_GeneralParameters.m_TotalHeight - aHeight
+      if theParameters.m_Direction == EarParameters.LEFT_DIRECTION:
+        aBaseX = -aLength;
+      else:
+        aBaseX = self.m_Parameters.m_GeneralParameters.m_Length
+      if theParameters.m_Align == EarParameters.CUSTOM_OFFSET:
+        aBaseY = theParameters.m_Offset
+      elif theParameters.m_Align == EarParameters.BACK_DIRECTION:
+        aBaseY = self.m_Parameters.m_GeneralParameters.m_Width - aWidth
+    if theParameters.m_Base == EarParameters.FRONT_DIRECTION or theParameters.m_Base == EarParameters.BACK_DIRECTION:
       aWidth = theParameters.m_Height
       aHeight = theParameters.m_Width
-    aEarBase = self.createBox(aLength, aWidth, aHeight, 0, 0, 0, aLabel + "Base")
+    if theParameters.m_Base == EarParameters.LEFT_DIRECTION or theParameters.m_Base == EarParameters.RIGHT_DIRECTION:
+      aLength = theParameters.m_Height
+      aWidth = theParameters.m_Length
+      aHeight = theParameters.m_Width
+    anEarBase = self.createBox(aLength, aWidth, aHeight, 0, 0, 0, aLabel + "Base")
+    anEarBase.Placement.Base.x = aBaseX
+    anEarBase.Placement.Base.y = aBaseY
+    anEarBase.Placement.Base.z = aBaseZ
  
 # Macro End: D:\3dPrinter\FreeCADMacroses\CrazyHomeEnclosure.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
