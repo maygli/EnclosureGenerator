@@ -339,21 +339,56 @@ class EnclosureParameters:
       self.m_Ears.append(anEar)
     theSett.endGroup()
 #For test only
-#    aBase = EarParameters.TOP_DIRECTION
+#    aBase = EarParameters.BOTTOM_DIRECTION
 #    anEar = EarParameters()
 #    anEar.m_Base = aBase
+#    anEar.m_Direction = EarParameters.LEFT_DIRECTION
+#    anEar.m_Align = EarParameters.FRONT_DIRECTION
 #    self.m_Ears.append(anEar)
+ 
 #    anEar = EarParameters()
 #    anEar.m_Base = aBase
+#    anEar.m_Direction = EarParameters.RIGHT_DIRECTION
+#    anEar.m_Align = EarParameters.FRONT_DIRECTION
+#    self.m_Ears.append(anEar)
+
+#    anEar = EarParameters()
+#    anEar.m_Base = aBase
+#    anEar.m_Direction = EarParameters.LEFT_DIRECTION
 #    anEar.m_Align = EarParameters.BACK_DIRECTION
 #    anEar.m_Width = 15.
+#    anEar.m_isCenterHole = False
+#    anEar.m_HoleX = 6.
+#    anEar.m_HoleY = 6. 
 #    self.m_Ears.append(anEar)
+
 #    anEar = EarParameters()
 #    anEar.m_Base = aBase
 #    anEar.m_Direction = EarParameters.RIGHT_DIRECTION
+#    anEar.m_Align = EarParameters.BACK_DIRECTION
+#    anEar.m_Width = 15.
+#    anEar.m_isCenterHole = False
+#    anEar.m_HoleX = 6.
+#    anEar.m_HoleY = 6. 
 #    self.m_Ears.append(anEar)
+
 #    anEar = EarParameters()
-#    anEar.m_Base = aBase
-#    anEar.m_Direction = EarParameters.RIGHT_DIRECTION
-#   anEar.m_Width = 15.
+#    anEar.m_Base = EarParameters.BACK_DIRECTION
+#    anEar.m_Direction = EarParameters.LEFT_DIRECTION
+#    anEar.m_Align = EarParameters.BOTTOM_DIRECTION
+#    anEar.m_Width = 15.
+#    anEar.m_isCenterHole = False
+#    anEar.m_HoleX = 6.
+#    anEar.m_HoleY = 9. 
 #    self.m_Ears.append(anEar)
+
+#    anEar = EarParameters()
+#    anEar.m_Base = EarParameters.BACK_DIRECTION
+#    anEar.m_Direction = EarParameters.RIGHT_DIRECTION
+#    anEar.m_Align = EarParameters.BOTTOM_DIRECTION
+#    anEar.m_Width = 15.
+#    anEar.m_isCenterHole = False
+#    anEar.m_HoleX = 6.
+#    anEar.m_HoleY = 9. 
+#    self.m_Ears.append(anEar)
+

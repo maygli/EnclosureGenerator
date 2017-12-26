@@ -383,14 +383,27 @@ class EnclosureGenerator:
     aLength = theParameters.m_Length
     aWidth = theParameters.m_Width
     aHeight = theParameters.m_Height
-    aBaseX = 0;
-    aBaseY = 0;
-    aBaseZ = 0;
+    aBaseX = 0.
+    aBaseY = 0.
+    aBaseZ = 0.
+    aHoleX = 0.
+    aHoleY = 0.
+    aHoleZ = 0.
+    aHoleRotAxis = FreeCAD.Vector(1,0,0)
+    aHoleRotAngle = 0.
     if theParameters.m_Base == EarParameters.TOP_DIRECTION or theParameters.m_Base == EarParameters.BOTTOM_DIRECTION:
+      if theParameters.m_isCenterHole == True:
+        aHoleX = aLength/2.
+        aHoleY = aWidth/2.
+      else:
+        aHoleX = theParameters.m_HoleX
+        aHoleY = theParameters.m_HoleY
       if theParameters.m_Base == EarParameters.TOP_DIRECTION:
         aBaseZ = self.m_Parameters.m_GeneralParameters.m_TotalHeight - aHeight
+      else:
+        aHoleZ = aHeight - theParameters.m_Hole.m_Height
       if theParameters.m_Direction == EarParameters.LEFT_DIRECTION:
-        aBaseX = -aLength;
+        aBaseX = -aLength
       else:
         aBaseX = self.m_Parameters.m_GeneralParameters.m_Length
       if theParameters.m_Align == EarParameters.CUSTOM_OFFSET:
@@ -400,13 +413,58 @@ class EnclosureGenerator:
     if theParameters.m_Base == EarParameters.FRONT_DIRECTION or theParameters.m_Base == EarParameters.BACK_DIRECTION:
       aWidth = theParameters.m_Height
       aHeight = theParameters.m_Width
+      aHoleRotAngle = 270.
+      if theParameters.m_isCenterHole == True:
+        aHoleZ = aHeight/2.
+        aHoleX = aLength/2.
+      else:
+        aHoleX = theParameters.m_HoleX
+        aHoleZ = theParameters.m_HoleY
+      if theParameters.m_Base == EarParameters.BACK_DIRECTION:
+        aBaseY = self.m_Parameters.m_GeneralParameters.m_Width - aWidth
+      else:
+        aHoleY = aWidth - theParameters.m_Hole.m_Height
+      if theParameters.m_Direction == EarParameters.LEFT_DIRECTION:
+        aBaseX = -aLength
+      else:
+        aBaseX = self.m_Parameters.m_GeneralParameters.m_Length
+      if theParameters.m_Align == EarParameters.CUSTOM_OFFSET:
+        aBaseZ = theParameters.m_Offset
+      elif theParameters.m_Align == EarParameters.TOP_DIRECTION:
+        aBaseZ = self.m_Parameters.m_GeneralParameters.m_TotalHeight - aHeight
     if theParameters.m_Base == EarParameters.LEFT_DIRECTION or theParameters.m_Base == EarParameters.RIGHT_DIRECTION:
       aLength = theParameters.m_Height
       aWidth = theParameters.m_Length
       aHeight = theParameters.m_Width
+      aHoleRotAngle = 90.
+      aHoleRotAxis = FreeCAD.Vector(0,1,0)
+      if theParameters.m_isCenterHole == True:
+        aHoleZ = aHeight/2.
+        aHoleY = aWidth/2.
+      else:
+        aHoleZ = theParameters.m_HoleY
+        aHoleY = theParameters.m_HoleX
+      if theParameters.m_Base == EarParameters.RIGHT_DIRECTION:
+        aBaseX = self.m_Parameters.m_GeneralParameters.m_Length - aLength
+      else:
+        aHoleX = aLength - theParameters.m_Hole.m_Height
+      if theParameters.m_Direction == EarParameters.FRONT_DIRECTION:
+        aBaseY = -aWidth
+      else:
+        aBaseY = self.m_Parameters.m_GeneralParameters.m_Width
+      if theParameters.m_Align == EarParameters.CUSTOM_OFFSET:
+        aBaseZ = theParameters.m_Offset
+      elif theParameters.m_Align == EarParameters.TOP_DIRECTION:
+        aBaseZ = self.m_Parameters.m_GeneralParameters.m_TotalHeight - aHeight
     anEarBase = self.createBox(aLength, aWidth, aHeight, 0, 0, 0, aLabel + "Base")
-    anEarBase.Placement.Base.x = aBaseX
-    anEarBase.Placement.Base.y = aBaseY
-    anEarBase.Placement.Base.z = aBaseZ
+    anObj = anEarBase
+    if theParameters.m_Hole.m_isCreate:
+      aHole = self.createCylinder(theParameters.m_Hole.m_Radius, theParameters.m_Hole.m_Height, aHoleX, aHoleY, aHoleZ, aLabel+"Hole")
+#      if theParameters.m_Base == EarParameters.FRONT_DIRECTION or theParameters.m_Base == EarParameters.BACK_DIRECTION:
+      aHole.Placement = FreeCAD.Placement(FreeCAD.Vector(aHoleX,aHoleY,aHoleZ), FreeCAD.Rotation(aHoleRotAxis,aHoleRotAngle), FreeCAD.Vector(0,0,0))
+      anObj = self.cutObjects(anEarBase, aHole, aLabel)
+    anObj.Placement.Base.x = aBaseX
+    anObj.Placement.Base.y = aBaseY
+    anObj.Placement.Base.z = aBaseZ
  
 # Macro End: D:\3dPrinter\FreeCADMacroses\CrazyHomeEnclosure.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
