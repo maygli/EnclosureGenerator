@@ -25,37 +25,20 @@
 from PySide import QtGui, QtCore
 import FreeCAD,FreeCADGui 
 import CrazyHomeEnclosureData, CrazyHomeEnclosureGUI, CrazyHomeEnclosureGenerator
+import os
+
+aCurrDir = os.path.dirname(__file__)
+iconsPath = os.path.join( aCurrDir, 'resources' )
+generatoricon = os.path.join( iconsPath, 'generator.png' )
  
 class DIYEnclosure:
   "DIY Enclosure object"
  
   def GetResources(self):
     return {"MenuText": "Create Enclosure",
-            "Accel": "Ctrl+M",
+            "Accel": "Ctrl+G",
             "ToolTip": "Create enclosure for electronic devices",
-            "Pixmap"  : """
-/* XPM */
-static const char *test_icon[]={
-"16 16 2 1",
-"a c #000000",
-". c None",
-"................",
-"................",
-"..############..",
-"..############..",
-"..############..",
-"......####......",
-"......####......",
-"......####......",
-"......####......",
-"......####......",
-"......####......",
-"......####......",
-"......####......",
-"......####......",
-"................",
-"................"};
-"""}
+            "Pixmap"  : generatoricon}
 
   def IsActive(self):
     if FreeCAD.ActiveDocument == None:
