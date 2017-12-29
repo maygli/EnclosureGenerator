@@ -16,4 +16,4 @@ git clone https://github.com/maygli/EnclosureGenerator
 
 ## Usage
 
-Launch FreeCAD, select "Enclosure" from the workbench pull-down menu
+Launch FreeCAD, select "Electronics enclosure" from the workbench pull-down menu

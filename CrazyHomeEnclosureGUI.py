@@ -15,24 +15,24 @@ class HoleWidget(QtGui.QGroupBox):
   def __init__(self,theTitle,theParent=None):
     QtGui.QGroupBox.__init__(self,theTitle,theParent)
     self.setCheckable(True)                          
-    aLayout = QtGui.QGridLayout()
+    self.m_Layout = QtGui.QGridLayout()
 
-    aRow = 0
-    aLayout.addWidget(QtGui.QLabel(self.tr("Hole radius,mm"),self),aRow,0)
+    self.m_Row = 0
+    self.m_Layout.addWidget(QtGui.QLabel(self.tr("Hole radius,mm"),self),self.m_Row,0)
     self.m_HoleRadiusLE = QtGui.QLineEdit(self)
     aHoleRadiusVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_HoleRadiusLE)
     self.m_HoleRadiusLE.setValidator(aHoleRadiusVld)
-    aLayout.addWidget(self.m_HoleRadiusLE,aRow,1)
+    self.m_Layout.addWidget(self.m_HoleRadiusLE,self.m_Row,1)
  
-    aRow = aRow + 1
-    aLayout.addWidget(QtGui.QLabel(self.tr("Hole height,mm"),self),aRow,0)
+    self.m_Row = self.m_Row + 1
+    self.m_Layout.addWidget(QtGui.QLabel(self.tr("Hole height,mm"),self),self.m_Row,0)
     self.m_HoleHeightLE = QtGui.QLineEdit(self)
     aHoleHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_HoleRadiusLE)
     self.m_HoleHeightLE.setValidator(aHoleHeightVld)
-    aLayout.addWidget(self.m_HoleHeightLE,aRow,1)
+    self.m_Layout.addWidget(self.m_HoleHeightLE,self.m_Row,1)
 
-    aRow = aRow + 1
-    self.setLayout(aLayout) 
+    self.m_Row = self.m_Row + 1
+    self.setLayout(self.m_Layout) 
 
   def fillParameters(self,theParameters):
     theParameters.m_isCreate = self.isChecked()
@@ -43,6 +43,96 @@ class HoleWidget(QtGui.QGroupBox):
     self.setChecked(theParameters.m_isCreate)
     self.m_HoleRadiusLE.setText(str(theParameters.m_Radius))
     self.m_HoleHeightLE.setText(str(theParameters.m_Height))
+
+class EarHoleWidget(HoleWidget):
+  def __init__(self,theTitle,theParent=None):
+    HoleWidget.__init__(self,theTitle,theParent)
+
+    self.m_Layout.addWidget(QtGui.QLabel(self.tr("Center hole"),self),self.m_Row,0)
+    self.m_CenterHoleChk = QtGui.QCheckBox(self)
+    self.m_CenterHoleChk.toggled.connect(self.updateStates)
+    self.m_Layout.addWidget(self.m_CenterHoleChk,self.m_Row,1)
+    
+    self.m_Row = self.m_Row + 1
+    self.m_Layout.addWidget(QtGui.QLabel(self.tr("Hole offset X,mm"),self),self.m_Row,0)
+    self.m_OffsetXLE = QtGui.QLineEdit(self)
+    aLengthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_OffsetXLE)
+    self.m_OffsetXLE.setValidator(aLengthVld)
+    self.m_Layout.addWidget(self.m_OffsetXLE,self.m_Row,1)
+
+    self.m_Row = self.m_Row + 1
+    self.m_Layout.addWidget(QtGui.QLabel(self.tr("Hole offset Y,mm"),self),self.m_Row,0)
+    self.m_OffsetYLE = QtGui.QLineEdit(self)
+    aWidthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_OffsetYLE)
+    self.m_OffsetYLE.setValidator(aWidthVld)
+    self.m_Layout.addWidget(self.m_OffsetYLE,self.m_Row,1)
+
+  def updateStates(self):
+    self.m_OffsetXLE.setReadOnly(self.m_CenterHoleChk.isChecked())
+    self.m_OffsetYLE.setReadOnly(self.m_CenterHoleChk.isChecked())
+    pass
+
+class EarWidget(QtGui.QWidget):
+  def __init__(self,theEarParameters,theParent=None):
+    QtGui.QWidget.__init__(self,theParent)
+    aLayout = QtGui.QGridLayout()
+    self.setLayout(aLayout)
+
+    self.m_HoleX = 6.
+    self.m_HoleY = 6.
+    self.m_Hole = HoleParameters()
+
+    aRow = 0
+    aLayout.addWidget(QtGui.QLabel(self.tr("Length,mm"),self),aRow,0)
+    self.m_LengthLE = QtGui.QLineEdit(self)
+    aLengthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_LengthLE)
+    self.m_LengthLE.setValidator(aLengthVld)
+    aLayout.addWidget(self.m_LengthLE,aRow,1)
+
+    aRow = aRow + 1
+    aLayout.addWidget(QtGui.QLabel(self.tr("Width,mm"),self),aRow,0)
+    self.m_WidthLE = QtGui.QLineEdit(self)
+    aWidthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_WidthLE)
+    self.m_WidthLE.setValidator(aWidthVld)
+    aLayout.addWidget(self.m_WidthLE,aRow,1)
+
+    aRow = aRow + 1
+    aLayout.addWidget(QtGui.QLabel(self.tr("Height,mm"),self),aRow,0)
+    self.m_HeightLE = QtGui.QLineEdit(self)
+    aHeightVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_HeightLE)
+    self.m_HeightLE.setValidator(aHeightVld)
+    aLayout.addWidget(self.m_HeightLE,aRow,1)
+
+    aRow = aRow+1
+    aLabel = QtGui.QLabel(self.tr("Base"),self);
+    aLayout.addWidget(aLabel,aRow,0)
+    self.m_BaseCmb = QtGui.QComboBox(self);
+    anItems = [self.tr("Bottom"),self.tr("Back"),self.tr("Top"), self.tr("Front"), self.tr("Left"), self.tr("Right")]
+    self.m_BaseCmb.addItems(anItems)
+    aLayout.addWidget(self.m_BaseCmb,aRow,1)
+    
+    aRow = aRow + 1
+    aLabel = QtGui.QLabel(self.tr("Direction"),self);
+    aLayout.addWidget(aLabel,aRow,0)
+    self.m_DirCmb = QtGui.QComboBox(self);
+    aLayout.addWidget(self.m_DirCmb,aRow,1)
+    
+    aRow = aRow + 1
+    aLabel = QtGui.QLabel(self.tr("Alignment"),self);
+    aLayout.addWidget(aLabel,aRow,0)
+    self.m_AlignCmb = QtGui.QComboBox(self);
+    aLayout.addWidget(self.m_AlignCmb,aRow,1)
+
+    aRow = aRow + 1
+    aLayout.addWidget(QtGui.QLabel(self.tr("Offset,mm"),self),aRow,0)
+    self.m_OffsetLE = QtGui.QLineEdit(self)
+    aOffsetVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_OffsetLE)
+    self.m_OffsetLE.setValidator(aOffsetVld)
+    aLayout.addWidget(self.m_OffsetLE,aRow,1)
+
+    aRow = aRow + 1
+    self.m_HoleWdg = EarHoleWidget(self.tr("Create hole"),self)
+    aLayout.addWidget(self.m_HoleWdg,aRow,1,1,2)
 
 class HoleParametersDialog(QtGui.QDialog):
   def __init__(self,theHoleParameters,theParent=None):
@@ -403,7 +493,10 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_BackPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),aTabWidget)   
     aTabWidget.addTab(self.m_BackPanelWidget,self.tr("Back panel")) 
 
+#for testing
+    self.m_EarWidget = EarWidget(aTabWidget)    
     aSplitter.addWidget(aTabWidget)
+    aTabWidget.addTab(self.m_EarWidget,self.tr("Ears")) 
 
     self.m_HelpWdg = QtGui.QTextBrowser(self)
     self.m_HelpWdg.setSearchPaths([helpPath])
