@@ -160,6 +160,31 @@ class EarParameters:
     self.m_Hole.restoreFromSettings(theSett,"Hole")
     theSett.endGroup()
 
+  def convertDirEnumToStr(self,theData):
+    if theData == self.BOTTOM_DIRECTION:
+      return "bottoom"
+    if theData == self.TOP_DIRECTION:
+      return "top"
+    if theData == self.FRONT_DIRECTION:
+      return "front"
+    if theData == self.BACK_DIRECTION:
+      return "back"
+    if theData == self.LEFT_DIRECTION:
+      return "left"
+    if theData == self.RIGHT_DIRECTION:
+      return "right"
+    if theData == self.CUSTOM_OFFSET:
+      return "custom"
+
+  def getBaseStr(self):
+    return self.convertDirEnumToStr(self.m_Base)
+
+  def getDirectionStr(self):
+    return self.convertDirEnumToStr(self.m_Direction)
+
+  def getAlignStr(self):
+    return self.convertDirEnumToStr(self.m_Align)
+
 class PanelParameters:
   def __init__(self):
     self.m_isCreate = True

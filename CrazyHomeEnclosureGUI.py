@@ -50,7 +50,6 @@ class EarHoleWidget(HoleWidget):
 
     self.m_Layout.addWidget(QtGui.QLabel(self.tr("Center hole"),self),self.m_Row,0)
     self.m_CenterHoleChk = QtGui.QCheckBox(self)
-    self.m_CenterHoleChk.toggled.connect(self.updateStates)
     self.m_Layout.addWidget(self.m_CenterHoleChk,self.m_Row,1)
     
     self.m_Row = self.m_Row + 1
@@ -66,11 +65,42 @@ class EarHoleWidget(HoleWidget):
     aWidthVld = QtGui.QDoubleValidator(0.0001,1000000000.,15,self.m_OffsetYLE)
     self.m_OffsetYLE.setValidator(aWidthVld)
     self.m_Layout.addWidget(self.m_OffsetYLE,self.m_Row,1)
+    
+    self.m_CenterHoleChk.stateChanged.connect(self.onUpdateStates)
+    self.onUpdateStates()
 
-  def updateStates(self):
+  def onUpdateStates(self):
     self.m_OffsetXLE.setReadOnly(self.m_CenterHoleChk.isChecked())
     self.m_OffsetYLE.setReadOnly(self.m_CenterHoleChk.isChecked())
     pass
+
+  def fillParameters(self,theParameters):
+    HoleWidget.fillParameters(self,theParameters.m_Hole)
+    theParameters.m_HoleX = float(self.m_OffsetXLE.text())
+    theParameters.m_HoleY = float(self.m_OffsetYLE.text())
+    theParameters.m_isCenterHole = self.m_CenterHoleChk.isChecked()
+
+  def setParameters(self,theParameters):
+    HoleWidget.setParameters(self,theParameters.m_Hole)
+    self.m_OffsetXLE.setText(str(theParameters.m_HoleX))
+    self.m_OffsetYLE.setText(str(theParameters.m_HoleY))
+    self.m_CenterHoleChk.setChecked(theParameters.m_isCenterHole)
+
+class EarParametersDialog(QtGui.QDialog):
+  def __init__(self,theEarParameters,theParent=None):
+    QtGui.QDialog.__init__(self,theParent)
+    aLayout = QtGui.QVBoxLayout()
+    self.m_EarWidget = EarWidget(self)
+    self.m_EarWidget.setParameters(theEarParameters)
+    aLayout.addWidget(self.m_EarWidget)
+    aDlgBtns = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok|QtGui.QDialogButtonBox.Cancel)
+    aDlgBtns.accepted.connect(self.accept)
+    aDlgBtns.rejected.connect(self.reject)
+    aLayout.addWidget(aDlgBtns)
+    self.setLayout(aLayout)
+
+  def fillParameters(self, theParameters):
+    self.m_EarWidget.fillParameters(theParameters)
 
 class EarWidget(QtGui.QWidget):
   def __init__(self,theEarParameters,theParent=None):
@@ -123,6 +153,9 @@ class EarWidget(QtGui.QWidget):
     self.m_AlignCmb = QtGui.QComboBox(self);
     aLayout.addWidget(self.m_AlignCmb,aRow,1)
 
+    self.m_BaseCmb.currentIndexChanged.connect(self.onBaseChanged)
+    self.onBaseChanged()
+
     aRow = aRow + 1
     aLayout.addWidget(QtGui.QLabel(self.tr("Offset,mm"),self),aRow,0)
     self.m_OffsetLE = QtGui.QLineEdit(self)
@@ -133,6 +166,190 @@ class EarWidget(QtGui.QWidget):
     aRow = aRow + 1
     self.m_HoleWdg = EarHoleWidget(self.tr("Create hole"),self)
     aLayout.addWidget(self.m_HoleWdg,aRow,1,1,2)
+
+  def onBaseChanged(self):
+    aBaseIndx =  self.m_BaseCmb.currentIndex()
+    aDirs = ["Left","Right"]
+    anAligns = ["Top","Bottom"]
+    if aBaseIndx == 4 or aBaseIndx == 5:
+      aDirs = ["Front","Back"]
+    if aBaseIndx == 0 or aBaseIndx == 2:
+      anAligns = ["Front","Back"]
+    self.m_DirCmb.clear()
+    self.m_DirCmb.addItems(aDirs)
+    self.m_AlignCmb.clear()
+    self.m_AlignCmb.addItems(anAligns)
+
+  def fillParameters(self,theParameters):
+    if self.m_BaseCmb.currentIndex() == 0:
+      theParameters.m_Base = theParameters.BOTTOM_DIRECTION
+    elif self.m_BaseCmb.currentIndex() == 1:
+      theParameters.m_Base = theParameters.BACK_DIRECTION
+    elif self.m_BaseCmb.currentIndex() == 2:
+      theParameters.m_Base = theParameters.TOP_DIRECTION
+    elif self.m_BaseCmb.currentIndex() == 3:
+      theParameters.m_Base = theParameters.FRONT_DIRECTION
+    elif self.m_BaseCmb.currentIndex() == 4:
+      theParameters.m_Base = theParameters.LEFT_DIRECTION
+    elif self.m_BaseCmb.currentIndex() == 5:
+      theParameters.m_Base = theParameters.RIGHT_DIRECTION
+    if theParameters.m_Base == theParameters.LEFT_DIRECTION or theParameters.m_Base == theParameters.RIGHT_DIRECTION:
+      if self.m_DirCmb.currentIndex() == 0:
+        theParameters.m_Direction = theParameters.FRONT_DIRECTION
+      else:
+        theParameters.m_Direction = theParameters.BACK_DIRECTION
+    else:
+      if self.m_DirCmb.currentIndex() == 0:
+        theParameters.m_Direction = theParameters.LEFT_DIRECTION
+      else:
+        theParameters.m_Direction = theParameters.RIGHT_DIRECTION
+    if theParameters.m_Base == theParameters.TOP_DIRECTION or theParameters.m_Base == theParameters.BOTTOM_DIRECTION:
+      if self.m_AlignCmb.currentIndex() == 0:
+        theParameters.m_Align = theParameters.FRONT_DIRECTION
+      else:
+        theParameters.m_Align = theParameters.BACK_DIRECTION
+    else:
+      if self.m_AlignCmb.currentIndex() == 0:
+        theParameters.m_Align = theParameters.FRONT_DIRECTION
+      else:
+        theParameters.m_Align = theParameters.BACK_DIRECTION
+    theParameters.m_Length = float(self.m_LengthLE.text())
+    theParameters.m_Width = float(self.m_WidthLE.text())
+    theParameters.m_Height = float(self.m_HeightLE.text())
+    theParameters.m_Offset = float(self.m_OffsetLE.text())
+    self.m_HoleWdg.fillParameters(theParameters)
+
+  def setParameters(self,theParameters):
+    if theParameters.m_Base == theParameters.BOTTOM_DIRECTION:
+      self.m_BaseCmb.setCurrentIndex(0)
+    elif theParameters.m_Base == theParameters.TOP_DIRECTION:
+      self.m_BaseCmb.setCurrentIndex(2)
+    elif theParameters.m_Base == theParameters.FRONT_DIRECTION:
+      self.m_BaseCmb.setCurrentIndex(3)
+    elif theParameters.m_Base == theParameters.BACK_DIRECTION:
+      self.m_BaseCmb.setCurrentIndex(1)
+    elif theParameters.m_Base == theParameters.LEFT_DIRECTION:
+      self.m_BaseCmb.setCurrentIndex(4)
+    elif theParameters.m_Base == theParameters.RIGHT_DIRECTION:
+      self.m_BaseCmb.setCurrentIndex(5)
+    self.onBaseChanged()
+    if theParameters.m_Direction == theParameters.LEFT_DIRECTION or theParameters.m_Direction == theParameters.FRONT_DIRECTION:
+      self.m_DirCmb.setCurrentIndex(0)
+    else:
+      self.m_DirCmb.setCurrentIndex(1)
+    if theParameters.m_Align == theParameters.FRONT_DIRECTION or theParameters.m_Align == theParameters.TOP_DIRECTION:
+      self.m_AlignCmb.setCurrentIndex(0)
+    else:
+      self.m_AlignCmb.setCurrentIndex(1)
+    self.m_LengthLE.setText(str(theParameters.m_Length))
+    self.m_WidthLE.setText(str(theParameters.m_Width))
+    self.m_HeightLE.setText(str(theParameters.m_Height))
+    self.m_OffsetLE.setText(str(theParameters.m_Offset))
+    self.m_HoleWdg.setParameters(theParameters)
+
+class EarsWidget(QtGui.QWidget):
+  def __init__(self,theEars,theParent=None):
+    QtGui.QWidget.__init__(self,theParent)
+    aLayout = QtGui.QHBoxLayout()
+    self.m_TableWidget = QtGui.QTableWidget(self)
+    aColumns = ["Parameters","Edit"]
+    self.m_TableWidget.setColumnCount(len(aColumns))
+    self.m_TableWidget.setHorizontalHeaderLabels(aColumns)
+    self.m_TableWidget.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+    
+    self.m_Ears = []
+    aBtnsLayout = QtGui.QVBoxLayout()
+    anAddBtn = QtGui.QToolButton(self)
+    anAddIcon = QtGui.QIcon(os.path.join(iconsPath,"add.png"))
+    anAddBtn.setIcon(anAddIcon)
+    anAddBtn.setToolTip(self.tr("Add ear"))
+    anAddBtn.pressed.connect(self.onAdd)
+    aBtnsLayout.addWidget(anAddBtn)
+    aRemoveBtn = QtGui.QToolButton(self)
+    aRemoveIcon = QtGui.QIcon(os.path.join(iconsPath,"remove.png"))
+    aRemoveBtn.setIcon(aRemoveIcon)
+    aRemoveBtn.setToolTip(self.tr("Remove selected ears"))
+    aRemoveBtn.pressed.connect(self.onRemove)
+    aBtnsLayout.addWidget(aRemoveBtn)
+    aBtnsLayout.addStretch()
+    aLayout.addWidget(self.m_TableWidget)
+    aLayout.addLayout(aBtnsLayout)
+    self.setLayout(aLayout)
+
+  def onRemove(self):
+    aRows = self.m_TableWidget.selectionModel().selectedRows()
+    for i in range(len(aRows)-1,-1,-1):
+      aRow = aRows[i]
+      del self.m_Ears[aRow.row()]
+    self.setEars(self.m_Ears)
+
+  def onAdd(self):
+    anEar = EarParameters()
+    aDlg = EarParametersDialog(anEar)
+    if aDlg.exec_() == QtGui.QDialog.Accepted:
+      aDlg.fillParameters(anEar)
+      self.m_Ears.append(anEar)
+      aRow = self.appendRow(anEar)
+    pass
+
+  def onEdit(self):
+    aBtn = self.sender()
+    aRowCnt = self.m_TableWidget.rowCount()
+    anIndx = -1
+    for aRow in range(0,aRowCnt):
+      aCurrBtn = self.m_TableWidget.cellWidget(aRow,1)
+      if aCurrBtn == aBtn:
+        anIndx = aRow
+        break
+    if anIndx < 0:
+      return
+    aDlg = EarParametersDialog(self.m_Ears[anIndx])
+    if aDlg.exec_() == QtGui.QDialog.Accepted:
+      aDlg.fillParameters(self.m_Ears[anIndx])
+      self.setRowData(anIndx,self.m_Ears[anIndx])
+    pass
+
+  def getEars(self):
+    return self.m_Ears
+    pass
+
+  def getEarText(self,theEar):
+    aText = "Size: %s x %s x % s  Placement: %s/%s/%s" % (str(theEar.m_Length), str(theEar.m_Width), str(theEar.m_Height),
+               theEar.getBaseStr(), theEar.getDirectionStr(), theEar.getAlignStr())
+    return aText
+  
+  def setRowData(self,theRow,theEar):
+    aText = self.getEarText(theEar)
+    anItem = QtGui.QTableWidgetItem(aText)
+    self.m_TableWidget.setItem(theRow,0,anItem)
+ 
+  def appendRow(self, theEar):
+    aRow = self.m_TableWidget.rowCount()
+    self.m_TableWidget.insertRow(aRow)
+    self.setRowData(aRow,theEar)
+    anEditIcon = QtGui.QIcon(os.path.join(iconsPath,"edit.png"))
+    aBtn = QtGui.QToolButton(self)
+    aBtn.setIcon(anEditIcon)
+    aBtn.setToolTip(self.tr("Edit ears parameters"))
+    aBtn.pressed.connect(self.onEdit)
+    self.m_TableWidget.setCellWidget(aRow,1,aBtn)	
+    return aRow
+
+  def removeAll(self):
+    aRows = self.m_TableWidget.rowCount()
+    for i in range(aRows-1,-1,-1):
+      self.m_TableWidget.removeRow(i)
+
+  def setEars(self,theEars):
+    self.m_Ears = theEars
+    self.removeAll()
+    for anEar in theEars:
+      self.appendRow(anEar)
+#    self.m_TableWidget.resizeRowsToContents()
+    self.m_TableWidget.resizeColumnsToContents()
+
+#    for aCustomStand in theCustomStands:
+#      self.m_TableWidget.appendRow(aCustomStand)
 
 class HoleParametersDialog(QtGui.QDialog):
   def __init__(self,theHoleParameters,theParent=None):
@@ -493,10 +710,9 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_BackPanelWidget = EnclosurePanelWidget(self.tr("Create panel"),aTabWidget)   
     aTabWidget.addTab(self.m_BackPanelWidget,self.tr("Back panel")) 
 
-#for testing
-    self.m_EarWidget = EarWidget(aTabWidget)    
+    self.m_EarsWidget = EarsWidget(aTabWidget)    
     aSplitter.addWidget(aTabWidget)
-    aTabWidget.addTab(self.m_EarWidget,self.tr("Ears")) 
+    aTabWidget.addTab(self.m_EarsWidget,self.tr("Ears")) 
 
     self.m_HelpWdg = QtGui.QTextBrowser(self)
     self.m_HelpWdg.setSearchPaths([helpPath])
@@ -691,6 +907,7 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_RightPanelWidget.fillParameters(theParameters.m_RightPanel)
     self.m_FrontPanelWidget.fillParameters(theParameters.m_FrontPanel)
     self.m_BackPanelWidget.fillParameters(theParameters.m_BackPanel)
+    theParameters.m_Ears = self.m_EarsWidget.getEars()
 
   def setParameters(self,theParameters):
     self.m_LenghtLE.setText(str(theParameters.m_GeneralParameters.m_Length))
@@ -713,6 +930,7 @@ class EnclosureControlPanel(QtGui.QDialog):
     self.m_RightPanelWidget.setParameters(theParameters.m_RightPanel)
     self.m_FrontPanelWidget.setParameters(theParameters.m_FrontPanel)
     self.m_BackPanelWidget.setParameters(theParameters.m_BackPanel)
+    self.m_EarsWidget.setEars(theParameters.m_Ears)
 
   def setTitle(self):
     aFileName = self.m_FileName
